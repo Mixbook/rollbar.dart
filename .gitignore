@@ -1,0 +1,9 @@
+# Dart files and folders
+pubspec.lock
+packages
+.buildlog
+out
+part.js
+*.dart.js
+*.js.deps
+*.js.map

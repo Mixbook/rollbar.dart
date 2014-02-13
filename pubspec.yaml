@@ -1,0 +1,9 @@
+name: rollbar
+version: 0.0.1
+authors:
+  - Anton Astashov <anton.astashov@gmail.com>
+description: A package for integrating with Rollbar.com
+homepage: http://www.github.com/Mixbook/rollbar.dart
+dependencies:
+  stack_trace: any
+  logging: any
