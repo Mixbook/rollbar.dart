@@ -6,6 +6,7 @@ import 'package:stack_trace/stack_trace.dart';
 import 'package:logging/logging.dart';
 
 typedef Map<String, Object> CustomPayload();
+typedef SourceMapsCodeVersion();
 
 class Rollbar {
   final Logger _logger;
@@ -13,9 +14,11 @@ class Rollbar {
   final Object _error;
   final CustomPayload _customPayload;
   final Trace _trace;
+  final bool _areSourceMapsEnabled;
+  final SourceMapsCodeVersion _sourceMapsCodeVersion;
 
   Map<String, Object> get _defaultPayload {
-    return {
+    var result = {
       "access_token": _accessToken,
       "data": {
         "environment": "production",
@@ -23,9 +26,10 @@ class Rollbar {
           "trace": {
             "frames": _trace.frames.map((frame) {
               return {
-                "filename": frame.uri.toString(),
+                "filename": Uri.parse(frame.uri.toString()).path,
                 "lineno": frame.line,
-                "method": frame.member
+                "method": frame.member,
+                "colno": frame.column
               };
             }).toList(),
             "exception": {
@@ -48,16 +52,28 @@ class Rollbar {
         }
       }
     };
+    if (_areSourceMapsEnabled) {
+      result["data"]["client"]["javascript"]["source_map_enabled"] = true;
+      result["data"]["client"]["javascript"]["code_version"] = _sourceMapsCodeVersion().toString();
+      result["data"]["client"]["javascript"]["guess_uncaught_frames"] = true;
+    }
+    return result;
   }
 
   Map<String, Object> get _payload {
     return _deepMerge(_defaultPayload, _customPayload());
   }
 
-  Rollbar(this._accessToken, this._error, StackTrace stackTrace, {CustomPayload customPayload, Logger logger}) :
+  Rollbar(this._accessToken, this._error, StackTrace stackTrace, {
+      CustomPayload customPayload,
+      Logger logger,
+      bool areSourceMapsEnabled,
+      SourceMapsCodeVersion sourceMapsCodeVersion}) :
       this._customPayload = customPayload,
       this._logger = logger,
-      this._trace = new Trace.from(stackTrace);
+      this._trace = new Trace.from(stackTrace),
+      this._areSourceMapsEnabled = areSourceMapsEnabled,
+      this._sourceMapsCodeVersion = sourceMapsCodeVersion;
 
   void send() {
     var request = new HttpRequest();
