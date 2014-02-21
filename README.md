@@ -49,3 +49,24 @@ rollbar.install("your_access_token", () {
   app.run();
 }, logger: Logger.root);
 ```
+
+By default, source maps support is enabled, but you need to specify a version of uploaded source maps.
+You can do that this way:
+
+```dart
+var app;
+rollbar.install("your_access_token", () {
+  app = new App();
+  app.run();
+}, sourceMapsCodeVersion: () => app.version);
+```
+
+Or you can disable source maps at all:
+
+```dart
+var app;
+rollbar.install("your_access_token", () {
+  app = new App();
+  app.run();
+}, areSourceMapsEnabled: false);
+```
