@@ -8,7 +8,8 @@ install(String accessToken, body(), {
       Map<String, Object> customPayload(),
       Logger logger,
       bool areSourceMapsEnabled: true,
-      sourceMapsCodeVersion()}) {
+      sourceMapsCodeVersion(),
+      onError(error, StackTrace stackTrace)}) {
   var result;
   if (customPayload == null) {
     customPayload = () => {};
@@ -17,6 +18,9 @@ install(String accessToken, body(), {
     result = body();
   }, onError: (error, stackTrace) {
     try {
+      if (onError != null) {
+        onError(error, stackTrace);
+      }
       var rollbar = new Rollbar(accessToken, error, stackTrace,
         customPayload: customPayload,
         logger: logger,
