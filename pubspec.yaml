@@ -1,5 +1,5 @@
 name: rollbar
-version: 0.1.1
+version: 0.1.2
 authors:
   - Anton Astashov <anton.astashov@gmail.com>
 description: A package for integrating with Rollbar.com
