@@ -66,17 +66,16 @@ class Rollbar {
   /// each error reported to Rollbar. The futures can be used to listen for completion
   /// or errors while calling the Rollbar API. The stream will also contain any uncaught
   /// errors originating from the zone. Use [Stream.handleError] to process these errors.
-  Stream<Future<HttpRequest>> traceErrorsInZone(body(), {Map<String, Object> otherData(error, Trace trace)}) {
+  Stream<Future<HttpRequest>> traceErrorsInZone(body(), {Map<String, Object> otherData(error, StackTrace trace)}) {
     var errors = new StreamController.broadcast();
 
     runZoned(body, onError: (error, stackTrace) {
       var request;
 
       try {
-        var stack = stackTrace != null ? new Trace.from(stackTrace) : new Trace([]);
-        request = trace(error, stack, otherData: otherData != null ? otherData(error, stack) : null);
+        request = trace(error, stackTrace, otherData: otherData != null ? otherData(error, stackTrace) : null);
       } catch (error, stackTrace) {
-        request = trace(error, stackTrace != null ? new Trace.from(stackTrace) : new Trace([]));
+        request = trace(error, stackTrace);
       }
 
       errors.add(request);
