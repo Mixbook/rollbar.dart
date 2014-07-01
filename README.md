@@ -1,95 +1,98 @@
 # rollbar.dart
 
-A Dart plugin for Rollbar.com
+A Dart plugin for Rollbar.
 
 ## Quick Start
 Import rollbar.dart.
 
-```
-import "package:rollbar/rollbar.dart" as rollbar;
+```dart
+import 'package:rollbar/rollbar.dart';
 ```
 
-Then wrap your main entrypoint into `rollbar.install`:
+Initialize an instance of `Rollbar` with your access token and environment.
 
 ```dart
-void main() {
-  rollbar.install("your_access_token", () {
-    var app = new App();
-    app.run();
-  });
+var rollbar = new Rollbar(token, environment);
+```
+
+Log errors to Rollbar with the `Rollbar.trace()` method.
+
+```dart
+try {
+  throw "Some error";
+} catch (error, stackTrace) {
+  rollbar.trace(error, stackTrace);
 }
 ```
 
-That's it!
-
-## Advanced features
-
-### Custom Payload
-
-If you want, you can send any additional data to Rollbar, or overwrite the defaults the package sends.
-Just pass it as an additional argument to rollbar.install. E.g. you may want to pass the current user info:
+Log messages to Rollbar with the `Rollbar.message()` method.
 
 ```dart
-var app;
-rollbar.install("your_access_token", () {
-  app = new App();
-  app.run();
-}, customPayload: () {
-  return {"data": {"person": {"id": app.user.id, "email": app.user.email}}};
+rollbar.message("User clicked Checkout");
+```
+
+Use `Rollbar.traceErrorsInZone()` to run a block of a code in a new zone, and log any of the its uncaught errors to Rollbar. The method will catch both synchronous and asynchronous errors. This method is useful for logging all the uncaught errors in your application. See this [guide](https://www.dartlang.org/articles/zones/) for more information about zones in Dart.
+
+```dart
+rollbar.traceErrorsInZone(() {
+  new Future.error("oh noes");
 });
 ```
 
-This will be merged into the default payload. You can send any additional data you want, just check the
-[API docs](https://rollbar.com/docs/api_items/) to know your options
-(section "Data Format").
+## Advanced features
+
+### Configuration
+The `Rollbar` constructor allows you to define data to be sent on each request to Rollbar. Use the constructor's `config` parameter to set this data.
+
+```dart
+var rollbar = new Rollbar(token, environment, config: {
+  "person": {
+    "id": 1,
+    "username": "jimmyp",
+    "email": "jimmyp@mixbook.com"
+  }
+})
+```
+
+### Customizing Payload Data
+Methods that send data to Rollbar, `Rollbar.message()`, `Rollbar.trace()` and `Rollbar.traceErrorsInZone()` all allow you to define additional data to send to Rollbar.
+
+```dart
+rollbar.trace(error, stackTrace, otherData: {
+  "custom": {
+    "project_id": 5
+  }
+})
+```
+
+The data will be merged into the default payload. Check the
+[API docs](https://rollbar.com/docs/api_items/) for all the options that Rollbar supports (section "Data Format").
 
 ### Logger
 
-You also can provide your logger, then the plugin will write some debug info to it in 'finer' level
+You also can provide your own logger. The plugin will write debug info to it in the 'finer' level. If no logger is provided, a default one will be used.
 
 ```dart
-rollbar.install("your_access_token", () {
-  var app = new App();
-  app.run();
-}, logger: Logger.root);
+var logger = new Logger("mylogger");
+var rollbar = new Rollbar(token, environment, logger: logger);
 ```
 
 ### Source Maps
 
-By default, source maps support is enabled, but you need to specify a version of uploaded source maps.
-You can do that this way:
+Rollbar supports [source maps](https://rollbar.com/mixbook/montage-client/docs/guides_sourcemaps/) for your JavaScript stack traces.
+
+By default, source maps are disabled, but you can enable them by setting the appropriate flags in the `Rollbar` constructor.
 
 ```dart
-var app;
-rollbar.install("your_access_token", () {
-  app = new App();
-  app.run();
-}, sourceMapsCodeVersion: () => app.version);
-```
-
-Or you can disable source maps at all:
-
-```dart
-var app;
-rollbar.install("your_access_token", () {
-  app = new App();
-  app.run();
-}, areSourceMapsEnabled: false);
-```
-
-You still have to upload source maps by yourself when you deploy your app, with the same version
-as you specified in `sourceMapsCodeVersion`. Check [source maps docs](https://rollbar.com/docs/guides_sourcemaps/)
-for more information.
-
-### Custom Error code
-
-If you want to execute some custom code when exception happens you can pass a function to onError argument:
-
-```dart
-rollbar.install("your_access_token", () {
-  var app = new App();
-  app.run();
-}, onError: (error, StackTrace stackTrace) {
-  // do something with error and/or stackTrace
+var rollbar = new Rollbar(token, environment, config: {
+  "client": {
+    "javascript": {
+      "source_map_enabled": true, // required
+      "code_version": "1.0", // required
+      "guess_uncaught_frames": true // optional value
+    }
+  }
 });
 ```
+
+The source maps will need to be available to Rollbar. Check their [documentation](https://rollbar.com/docs/guides_sourcemaps/) for how to do this.
