@@ -1,6 +1,6 @@
 # rollbar.dart
 
-A Dart plugin for Rollbar.
+A Dart package for logging application errors and messages to [Rollbar](http://www.rollbar.com).
 
 ## Quick Start
 Import rollbar.dart.
