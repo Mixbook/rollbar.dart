@@ -18,7 +18,7 @@ class Rollbar {
     });
   }
 
-  Future<HttpRequest> trace(Object error, StackTrace stackTrace, {Map<String, Object> otherData}) {
+  Future<Response> trace(Object error, StackTrace stackTrace, {Map<String, Object> otherData}) {
     var body = {
       "trace": {
         "frames": new Trace.from(stackTrace).frames.map((frame) {
@@ -40,7 +40,7 @@ class Rollbar {
     return new RollbarRequest(_accessToken, data, _logger).send();
   }
 
-  Future<HttpRequest> message(String messageBody, {Map<String, Object> metadata, Map<String, Object> otherData}) {
+  Future<Response> message(String messageBody, {Map<String, Object> metadata, Map<String, Object> otherData}) {
     var body = {
       "message": {
         "body": messageBody
@@ -66,7 +66,9 @@ class Rollbar {
   /// each error reported to Rollbar. The futures can be used to listen for completion
   /// or errors while calling the Rollbar API. The stream will also contain any uncaught
   /// errors originating from the zone. Use [Stream.handleError] to process these errors.
-  Stream<Future<HttpRequest>> traceErrorsInZone(body(), {Map<String, Object> otherData(error, StackTrace trace)}) {
+  Future<Stream<Future<Response>>> traceErrorsInZone(body(), {
+      Map<String, Object> otherData(error, StackTrace trace),
+      void errorHandler(error, StackTrace trace)}) {
     var errors = new StreamController.broadcast();
 
     runZoned(body, onError: (error, stackTrace) {
@@ -80,6 +82,10 @@ class Rollbar {
 
       errors.add(request);
       errors.addError(error, stackTrace);
+
+      if (errorHandler != null) {
+        errorHandler(error, stackTrace);
+      }
     });
 
     return errors.stream;

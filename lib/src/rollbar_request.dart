@@ -7,21 +7,20 @@ class RollbarRequest {
 
   RollbarRequest(this._accessToken, this._data, this._logger);
 
-  Future<HttpRequest> send() {
+  Future<Response> send() {
     var json = JSON.encode({"access_token": _accessToken, "data": _data});
 
-    var request = HttpRequest.request("https://api.rollbar.com/api/1/item/",
-        method: "POST",
-        requestHeaders: {"Content-Type": "application/json"},
-        sendData: json);
+    var request = post("https://api.rollbar.com/api/1/item/",
+        headers: {"Content-Type": "application/json"},
+        body: json);
 
     return request
         ..then((request) => _logStatus(request))
         ..catchError((error) => _logError(error));
   }
 
-  void _logStatus(HttpRequest request) {
-    switch(request.status) {
+  void _logStatus(Response response) {
+    switch(response.statusCode) {
       case 200:
         _logger.finer("Success. The item was accepted for processing.");
         break;
