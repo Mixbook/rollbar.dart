@@ -4,18 +4,19 @@ class RollbarRequest {
   String _accessToken;
   Map<String, Object> _data;
   Logger _logger;
+  Client _client;
 
-  RollbarRequest(this._accessToken, this._data, this._logger);
+  RollbarRequest(this._accessToken, this._data, this._logger, this._client);
 
   Future<Response> send() {
     var json = JSON.encode({"access_token": _accessToken, "data": _data});
 
-    var request = post("https://api.rollbar.com/api/1/item/",
+    var request = _client.post("https://api.rollbar.com/api/1/item/",
         headers: {"Content-Type": "application/json"},
         body: json);
 
     return request
-        ..then((request) => _logStatus(request))
+        ..then((response) => _logStatus(response))
         ..catchError((error) => _logError(error));
   }
 
