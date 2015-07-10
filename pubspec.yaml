@@ -1,5 +1,5 @@
 name: rollbar
-version: 0.2.0
+version: 0.3.0
 authors:
   - Anton Astashov <anton.astashov@gmail.com>
   - Dan Schultz <schultz.t.dan@gmail.com>
@@ -8,3 +8,4 @@ homepage: http://www.github.com/Mixbook/rollbar.dart
 dependencies:
   stack_trace: '>=1.0.2 <2.0.0'
   logging: '>=0.9.1 <0.10.0'
+  http: '>=0.11.1'

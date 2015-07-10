@@ -4,9 +4,11 @@ class Rollbar {
   String _accessToken;
   Map<String, Object> _config;
   Logger _logger;
+  Client _client;
 
-  Rollbar(this._accessToken, String environment, {Map<String, Object> config, Logger logger}) {
+  Rollbar(this._accessToken, String environment, {Map<String, Object> config, Logger logger, Client client}) {
     _logger = logger != null ? logger : _defaultLogger;
+    _client = client != null ? client : new IOClient();
 
     _config = config != null ? config : {};
     _config.addAll({
@@ -18,7 +20,7 @@ class Rollbar {
     });
   }
 
-  Future<HttpRequest> trace(Object error, StackTrace stackTrace, {Map<String, Object> otherData}) {
+  Future<Response> trace(Object error, StackTrace stackTrace, {Map<String, Object> otherData}) {
     var body = {
       "trace": {
         "frames": new Trace.from(stackTrace).frames.map((frame) {
@@ -37,10 +39,10 @@ class Rollbar {
     };
 
     var data = _generatePayloadData(body, otherData);
-    return new RollbarRequest(_accessToken, data, _logger).send();
+    return new RollbarRequest(_accessToken, data, _logger, _client).send();
   }
 
-  Future<HttpRequest> message(String messageBody, {Map<String, Object> metadata, Map<String, Object> otherData}) {
+  Future<Response> message(String messageBody, {Map<String, Object> metadata, Map<String, Object> otherData}) {
     var body = {
       "message": {
         "body": messageBody
@@ -52,7 +54,7 @@ class Rollbar {
     }
 
     var data = _generatePayloadData(body, otherData);
-    return new RollbarRequest(_accessToken, data, _logger).send();
+    return new RollbarRequest(_accessToken, data, _logger, _client).send();
   }
 
   /// Runs [body] in its own [Zone] and reports any uncaught asynchronous or synchronous
@@ -66,7 +68,7 @@ class Rollbar {
   /// each error reported to Rollbar. The futures can be used to listen for completion
   /// or errors while calling the Rollbar API. The stream will also contain any uncaught
   /// errors originating from the zone. Use [Stream.handleError] to process these errors.
-  Stream<Future<HttpRequest>> traceErrorsInZone(body(), {Map<String, Object> otherData(error, StackTrace trace)}) {
+  Stream<Future<Response>> traceErrorsInZone(body(), {Map<String, Object> otherData(error, StackTrace trace)}) {
     var errors = new StreamController.broadcast();
 
     runZoned(body, onError: (error, stackTrace) {
