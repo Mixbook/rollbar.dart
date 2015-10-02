@@ -1,6 +1,7 @@
 # Dart files and folders
 pubspec.lock
 packages
+.packages
 .buildlog
 out
 part.js
