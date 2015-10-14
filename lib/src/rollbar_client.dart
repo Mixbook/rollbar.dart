@@ -91,7 +91,8 @@ class Rollbar {
     var data = {
       "body": body,
       "timestamp": new DateTime.now().millisecondsSinceEpoch / 1000,
-      "language": "dart"
+      "language": "dart",
+      "platform": "browser"
     };
 
     if (otherData != null) {
